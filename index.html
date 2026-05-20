@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>La Mia Cinemateca</title>
+    <!-- Collego il file CSS per lo stile -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>La Mia Cinemateca</h1>
+            <p>Scopri i film disponibili</p>
+        </div>
+
+        <div class="menu">
+            <!-- onclick dice a JavaScript quale funzione chiamare quando si clicca -->
+            <!-- passo 'tutti' come parametro alla funzione chiamaAPI -->
+            <div class="card" onclick="chiamaAPI('tutti')">
+                <div class="card-icon"></div>
+                <h3>Tutti i Film</h3>
+                <p>Vedi l'intera collezione</p>
+            </div>
+            
+            <!-- passo 'recenti' come parametro alla funzione chiamaAPI -->
+            <div class="card" onclick="chiamaAPI('recenti')">
+                <div class="card-icon"></div>
+                <h3>Cast Numeroso</h3>
+                <p>Film con 10+ attori</p>
+            </div>
+        </div>
+
+        <!-- Questo div è vuoto. JavaScript lo riempirà con i film caricati -->
+        <!-- id="display" serve a JavaScript per trovare questo elemento nella pagina -->
+        <div id="display" class="risultati">
+            <div class="messaggio-inizio">
+                <p>Clicca su una card per iniziare</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collego il file JavaScript. Lo metto alla fine cosi l'HTML si carica prima -->
+    <script src="script.js"></script>
+</body>
+</html>

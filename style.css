@@ -1,0 +1,102 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #1a1a2e;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.menu {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    width: 180px;
+}
+
+.card:hover {
+    background: #f0f0f0;
+}
+
+.card h3 {
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.card p {
+    color: #666;
+    font-size: 0.85em;
+}
+
+.risultati {
+    background: white;
+    padding: 20px;
+    min-height: 300px;
+}
+
+.messaggio-inizio {
+    text-align: center;
+    color: #999;
+    padding: 50px;
+}
+
+.film {
+    background: #f8f9fa;
+    border-left: 3px solid #e50914;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.film strong {
+    color: #333;
+    font-size: 1.1em;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.film small {
+    color: #666;
+}
+
+.titolo-sezione {
+    color: #e50914;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    border-bottom: 2px solid #e50914;
+    padding-bottom: 8px;
+}
+
+.loading {
+    text-align: center;
+    padding: 50px;
+    color: #e50914;
+}
+
+.error {
+    background: #fee;
+    color: #c33;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #c33;
+}
