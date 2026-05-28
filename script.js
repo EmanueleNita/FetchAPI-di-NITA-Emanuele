@@ -1,56 +1,197 @@
-// rotta è il parametro che riceve (può essere 'tutti' o 'recenti')
-async function chiamaAPI(rotta) {
-    // Trovo il div con id="display" nella pagina HTML
-    const display = document.getElementById('display');
-    
-    // Mostro un messaggio di caricamento mentre aspetto la risposta del server
-    display.innerHTML = '<div class="loading">Caricamento in corso...</div>';
+(function () {
+  /* Tutte le pagine valide incluse le pagine di dettaglio */
+  const validPages = [
+    'home','umanistiche','scientifiche','civica','pcto','hobby','certificazioni',
+    'det-italiano','det-storia','det-inglese','det-motorie','det-religione',
+    'det-informatica','det-reti','det-matematica','det-tpsit','det-ai','det-gpoi'
+  ];
 
-    try {
-        // Uso i backtick ` per creare la stringa
-        // ${rotta} viene sostituito con il valore della variabile rotta
-        const url = `api.php/${rotta}`;
-        
-        // fetch() manda la richiesta HTTP al server
-        // await aspetta che la risposta arrivi
-        const risposta = await fetch(url);
-        
-        // .json() legge la risposta del server e la trasforma in oggetto JavaScript
-        const dati = await risposta.json();
+  const navSelectPages = ['home','umanistiche','scientifiche','civica','pcto','hobby','certificazioni'];
 
-        // risposta.ok è una proprietà che vale true se il server ha risposto con successo
-        // Se il server ha risposto con 404 (non trovato), ok vale false
-        if (!risposta.ok) {
-            // Lancio un errore con il messaggio ricevuto dal server
-            // Se dati.errore non esiste, uso "Errore sconosciuto"
-            throw new Error(dati.errore || "Errore sconosciuto");
-        }
+  const navLinks      = document.querySelectorAll('[data-page]');
+  const csWrapper     = document.getElementById('customSelectWrapper');
+  const csTrigger     = document.getElementById('customSelectTrigger');
+  const csMenu        = document.getElementById('customSelectMenu');
+  const csLabel       = document.getElementById('customSelectLabel');
+  const csItems       = csMenu ? csMenu.querySelectorAll('.custom-select-item') : [];
+  let isAnimating     = false;
 
-        // Controllo quale rotta è stata chiamata e metto il titolo giusto
-        if (rotta === 'tutti') {
-            display.innerHTML = '<div class="titolo-sezione">Tutti i Film</div>';
-        } else if (rotta === 'recenti') {
-            display.innerHTML = '<div class="titolo-sezione">Film con Cast Numeroso (10+ attori)</div>';
-        }
-        
-        // dati.length è il numero di film ricevuti
-        if (dati.length === 0) {
-            // Se non ci sono film, mostro un messaggio
-            display.innerHTML += "<p>Nessun film trovato.</p>";
-        } else {
-            // forEach esegue una funzione per ogni film nell'array dati film è l'elemento corrente del ciclo
-            dati.forEach(film => {
-                // += significa "aggiungi questo contenuto a quello che c'è già"
-                display.innerHTML += `
-                    <div class="film">
-                        <strong>${film.titolo}</strong>
-                        <small>Regista: ${film.regista} · Cast: ${film.cast} attori</small>
-                    </div>
-                `;
-            });
-        }
-    } catch (err) {
-        // Se qualcosa va male arrivo qui dentro. err.message contiene la descrizione dell'errore
-        display.innerHTML = `<div class="error">Errore: ${err.message}</div>`;
+  /* ── Funzioni helper per select personalizzato ── */
+  function openCustomSelect() {
+    csWrapper.classList.add('open');
+    csTrigger.setAttribute('aria-expanded', 'true');
+  }
+  function closeCustomSelect() {
+    csWrapper.classList.remove('open');
+    csTrigger.setAttribute('aria-expanded', 'false');
+  }
+  function updateCustomSelect(pageId) {
+    // Select personalizzato "Vai a..."
+    csItems.forEach(item => item.classList.remove('active'));
+    const match = csMenu ? csMenu.querySelector(`.custom-select-item[data-value="${pageId}"]`) : null;
+    if (match) {
+      match.classList.add('active');
+      csLabel.textContent = match.textContent.trim();
+    } else {
+      csLabel.textContent = 'Vai a...';
     }
-}
+    // Nav dropdown items
+    document.querySelectorAll('.nav-dropdown-item').forEach(item => {
+      item.classList.toggle('active', item.getAttribute('data-page') === pageId);
+    });
+  }
+
+  function switchPage(pageId, pushState = true) {
+    if (isAnimating) return;
+
+    const currentPage = document.querySelector('.page.active-page');
+    const nextPage    = document.getElementById(pageId) || document.getElementById('home');
+
+    if (currentPage === nextPage) return;
+
+    isAnimating = true;
+
+    /* Animazione fade-out della pagina corrente */
+    currentPage.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    currentPage.style.opacity    = '0';
+    currentPage.style.transform  = 'translateY(8px)';
+
+    setTimeout(() => {
+      currentPage.classList.remove('active-page');
+      currentPage.style.transition = '';
+      currentPage.style.opacity    = '';
+      currentPage.style.transform  = '';
+
+      nextPage.style.opacity    = '0';
+      nextPage.style.transform  = 'translateY(12px)';
+      nextPage.style.transition = 'none';
+      nextPage.classList.add('active-page');
+
+      void nextPage.offsetHeight; /* reflow */
+
+      nextPage.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      nextPage.style.opacity    = '1';
+      nextPage.style.transform  = 'translateY(0)';
+
+      setTimeout(() => {
+        nextPage.style.transition = '';
+        nextPage.style.opacity    = '';
+        nextPage.style.transform  = '';
+        isAnimating = false;
+      }, 320);
+    }, 200);
+
+    /* Aggiorna nav links */
+    navLinks.forEach(link =>
+      link.classList.toggle('active', link.getAttribute('data-page') === pageId)
+    );
+
+    /* Aggiorna custom select (solo pagine principali) */
+    if (csWrapper) {
+      updateCustomSelect(navSelectPages.includes(pageId) ? pageId : '');
+    }
+
+    /* Hash */
+    if (pushState && window.location.hash !== `#${pageId}`) {
+      history.pushState(null, null, `#${pageId}`);
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* Link di navigazione (navbar) */
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const pageId = link.getAttribute('data-page');
+      if (pageId) switchPage(pageId);
+
+      const navbarCollapse = document.querySelector('.navbar-collapse');
+      if (navbarCollapse?.classList.contains('show')) {
+        bootstrap.Collapse.getInstance(navbarCollapse)?.hide();
+      }
+    });
+  });
+
+  /* Pulsanti "Apri dettaglio" sulle card materie */
+  document.querySelectorAll('[data-goto]').forEach(el => {
+    el.addEventListener('click', () => {
+      const target = el.getAttribute('data-goto');
+      if (target) switchPage(target);
+    });
+  });
+
+  /* Select personalizzato "Vai a..." */
+  if (csTrigger) {
+    csTrigger.addEventListener('click', e => {
+      e.stopPropagation();
+      csWrapper.classList.contains('open') ? closeCustomSelect() : openCustomSelect();
+    });
+  }
+  csItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const pageId = item.getAttribute('data-value');
+      if (pageId) switchPage(pageId);
+      closeCustomSelect();
+    });
+  });
+  document.addEventListener('click', e => {
+    if (csWrapper && !csWrapper.contains(e.target)) closeCustomSelect();
+  });
+
+  /* ── Dropdown nav (Materie / Altro) ── */
+  const navDropWrappers = document.querySelectorAll('.nav-dropdown-wrapper');
+
+  function closeAllNavDrops(except) {
+    navDropWrappers.forEach(w => { if (w !== except) w.classList.remove('open'); });
+  }
+
+  navDropWrappers.forEach(wrapper => {
+    const trigger = wrapper.querySelector('.nav-dropdown-trigger');
+    trigger.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = wrapper.classList.contains('open');
+      closeAllNavDrops(null);
+      closeCustomSelect();
+      if (!isOpen) wrapper.classList.add('open');
+    });
+  });
+
+  document.querySelectorAll('.nav-dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const pageId = item.getAttribute('data-page');
+      if (pageId) switchPage(pageId);
+      closeAllNavDrops(null);
+      // Chiudi anche hamburger su mobile
+      const navbarCollapse = document.querySelector('.navbar-collapse');
+      if (navbarCollapse?.classList.contains('show')) {
+        bootstrap.Collapse.getInstance(navbarCollapse)?.hide();
+      }
+    });
+  });
+
+  document.addEventListener('click', () => closeAllNavDrops(null));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeCustomSelect(); closeAllNavDrops(null); }
+  });
+
+  /* Civica — indice rapido: scroll alla sezione */
+  document.querySelectorAll('.civica-index-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById('civica-' + btn.getAttribute('data-civica'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* Indietro/avanti browser */
+  window.addEventListener('popstate', () => {
+    const hash   = window.location.hash.substring(1);
+    const target = validPages.includes(hash) ? hash : 'home';
+    switchPage(target, false);
+  });
+
+  /* Inizializzazione */
+  const initHash = window.location.hash.substring(1);
+  const initPage = validPages.includes(initHash) ? initHash : 'home';
+  switchPage(initPage, false);
+})();
